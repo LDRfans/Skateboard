@@ -13,3 +13,14 @@ openpose[CMU]:https://github.com/CMU-Perceptual-Computing-Lab/openpose
 - 李德润：搜集平面与物体关系检测的相关方法
 - 刘芊渝：探索糊不糊方法
 - 张晨杨：OpenCV 物体检测（coco dataset）
+
+
+
+## Dev log
+
+### 12/12
+
+- Running openpose successfully;
+
+- Uploading the result on reduced dataset in `pose` , with json and jpg format for each image.
+
