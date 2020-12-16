@@ -24,3 +24,9 @@ openpose[CMU]:https://github.com/CMU-Perceptual-Computing-Lab/openpose
 
 - Uploading the result on reduced dataset in `pose` , with json and jpg format for each image.
 
+
+### 12/16
+
+- Parse json files from openpose;
+
+- Calculate 4 Angles and show the result.
