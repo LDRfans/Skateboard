@@ -2,6 +2,7 @@ import json
 import numpy as np
 from math import sqrt, pi
 import os
+import re
 
 Body25Kp = ["Nose", "Neck", "RShoulder", "RElbow", "RWrist", "LShoulder", "LElbow", "LWrist", "MidHip", "RHip", "RKnee", "RAnkle", "LHip", "LKnee", "LAnkle", "REye", "LEye", "REar", "LEar", "LBigToe", "LSmallToe", "LHeel", "RBigToe", "RSmallToe", "RHeel"]
 
@@ -24,13 +25,16 @@ def ReadFolder(case):
         path = "./pose/sliding/json"
     elif int(case) == 2:
         path = "./pose/static/json"
+    elif int(case) == 3:
+        path = "./pose/coco/json"
     else:
-        raise Exception("Input should be in {flying, sliding, static}")
+        raise Exception("Input should be in {flying, sliding, static, coco}")
     
     Files = os.listdir(path)
     NumLackKp = 0
     NumNoHuman = 0
     Result = [] # need to specify format
+    ProperImg = [] # a list of proper image
     for i in Files:
         try:
             Kp, _ = ParseJson(path + '/' + i)
@@ -41,10 +45,13 @@ def ReadFolder(case):
         try:
             Angle = Pose2Angle(Kp)
             Result.append(Angle)
+            RePath = i.split("_")[0] + '.jpg'
+            ProperImg.append(RePath)
         except:
             NumLackKp += 1
             Result.append(LACKKP)
-    print("Total Number of images from {} is {};\nNumber of images with a lack of keypoints is {};\nNumber of images with no human detected is {}. ".format(case, len(Files), NumLackKp, NumNoHuman))
+
+    print("Total Number of images from {} is {};\nNumber of images with a lack of keypoints is {};\nNumber of images with no human / more than 1 detected is {}. ".format(case, len(Files), NumLackKp, NumNoHuman))
     ProperNum = len(Files) - NumLackKp - NumNoHuman
     LShoulder = [i[0] for i in Result if i not in [NOHUMAN, LACKKP]]
     RShoulder = [i[1] for i in Result if i not in [NOHUMAN, LACKKP]]
@@ -52,9 +59,10 @@ def ReadFolder(case):
     RKnee = [i[3] for i in Result if i not in [NOHUMAN, LACKKP]]
     print("avg degree: ", np.mean(LShoulder), np.mean(RShoulder), np.mean(LKnee), np.mean(RKnee))
     print("std: ", np.std(LShoulder), np.std(RShoulder), np.std(LKnee), np.std(RKnee))
-
     # TBA : write the result into a file
-
+    with open("legal.txt", "w+") as f:
+        for img in ProperImg:
+            f.write(img + "\n")
 
 
 def ParseJson(path="./pose/flying/json/img01_keypoints.json"): 
@@ -67,7 +75,7 @@ def ParseJson(path="./pose/flying/json/img01_keypoints.json"):
     '''
     with open(path,"r") as f:
         Dict = json.load(f)
-        if Dict["people"] == []: # no human detected
+        if len(Dict["people"]) != 1: # no human / too many detected
             return None
         Pose = Dict['people'][0]['pose_keypoints_2d']
         Mask = [0, 1, 2]
@@ -103,7 +111,9 @@ def CalculateAngle(A, B, C):
     angle = np.arccos(cos)*180/pi
     return angle
 
+
+
 if __name__ == "__main__":
     while True:
-        case = input("Choose one from { 0(flying), 1(sliding), 2(static) }:\n")
+        case = input("Choose one from { 0(flying), 1(sliding), 2(static), 3(coco) }:\n")
         ReadFolder(case)
