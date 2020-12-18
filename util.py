@@ -3,6 +3,7 @@ import numpy as np
 from math import sqrt, pi
 import os
 import re
+import csv
 
 Body25Kp = ["Nose", "Neck", "RShoulder", "RElbow", "RWrist", "LShoulder", "LElbow", "LWrist", "MidHip", "RHip", "RKnee", "RAnkle", "LHip", "LKnee", "LAnkle", "REye", "LEye", "REar", "LEar", "LBigToe", "LSmallToe", "LHeel", "RBigToe", "RSmallToe", "RHeel"]
 
@@ -20,17 +21,19 @@ LACKKP = 1
 
 def ReadFolder(case):
     if int(case) == 0:
-        path = "./pose/flying/json"
+        path = "./pose/coco/flying/json"
     elif int(case) == 1:
-        path = "./pose/sliding/json"
+        path = "./pose/coco/sliding/json"
     elif int(case) == 2:
-        path = "./pose/static/json"
-    elif int(case) == 3:
-        path = "./pose/coco/json"
+        path = "./pose/coco/static/json"
     else:
-        raise Exception("Input should be in {flying, sliding, static, coco}")
+        raise Exception("Input should be in {flying, sliding, static}")
     
     Files = os.listdir(path)
+
+    if len(Files) > 100:
+        Files = Files[:100]
+
     NumLackKp = 0
     NumNoHuman = 0
     Result = [] # need to specify format
@@ -59,10 +62,66 @@ def ReadFolder(case):
     RKnee = [i[3] for i in Result if i not in [NOHUMAN, LACKKP]]
     print("avg degree: ", np.mean(LShoulder), np.mean(RShoulder), np.mean(LKnee), np.mean(RKnee))
     print("std: ", np.std(LShoulder), np.std(RShoulder), np.std(LKnee), np.std(RKnee))
-    # TBA : write the result into a file
-    with open("legal.txt", "w+") as f:
-        for img in ProperImg:
-            f.write(img + "\n")
+
+
+    # write the proper images' name into a file
+    # with open("legal.txt", "w+") as f:
+    #    for img in ProperImg:
+    #        f.write(img + "\n")
+
+def ReadFolder1(case):
+    if int(case) == 0:
+        path = "./pose/coco/flying/json"
+    elif int(case) == 1:
+        path = "./pose/coco/sliding/json"
+    elif int(case) == 2:
+        path = "./pose/coco/static/json"
+    else:
+        raise Exception("Input should be in {flying, sliding, static}")
+    
+    Files = os.listdir(path)
+
+    if len(Files) > 100:
+        Files = Files[:100]
+
+    NumLackKp = 0
+    NumNoHuman = 0
+    Result = [] # need to specify format
+    ProperImg = [] # a list of proper image
+    for i in Files:
+        try:
+            Kp, _ = ParseJson(path + '/' + i)
+        except:
+            NumNoHuman += 1
+            Result.append(NOHUMAN)
+            continue
+        try:
+            Angle = Pose2Angle(Kp)
+            Result.append(list(Angle)+[int(case)])
+
+        except:
+            NumLackKp += 1
+            Result.append(LACKKP)
+
+    print("Total Number of images from {} is {};\nNumber of images with a lack of keypoints is {};\nNumber of images with no human / more than 1 detected is {}. ".format(case, len(Files), NumLackKp, NumNoHuman))
+    ProperNum = len(Files) - NumLackKp - NumNoHuman
+
+    WriteCsv(data=Result)
+
+
+
+
+def WriteCsv(header=["LShoulder", "RShoulder", "LKnee", "RKnee", "Label"], data=[], fileName="coco_pose.csv"):
+    try:
+        with open(fileName,"a", newline='') as f:
+            writer = csv.writer(f)
+            if data[0][-1] == 0:
+                writer.writerow(header)
+            writer.writerows(data)
+    except:
+        Exception("Please check your input parameters! They are invalid:(")
+
+        
 
 
 def ParseJson(path="./pose/flying/json/img01_keypoints.json"): 
@@ -115,5 +174,5 @@ def CalculateAngle(A, B, C):
 
 if __name__ == "__main__":
     while True:
-        case = input("Choose one from { 0(flying), 1(sliding), 2(static), 3(coco) }:\n")
-        ReadFolder(case)
+        case = input("We are dealing with coco now. Choose one from { 0(flying), 1(sliding), 2(static)}!\n")
+        ReadFolder1(case)
