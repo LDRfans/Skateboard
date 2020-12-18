@@ -4,8 +4,7 @@ import json
 import os
 import numpy as np
 
-LABEL = "train"
-dirPath = "../COCO_3classes/"+LABEL
+dirPath = "../reduced dataset/COCO_skateboard"
 # dirPath = "../reduced dataset/flying skateboard"
 outPath = '../out'
 
@@ -13,23 +12,22 @@ outPath = '../out'
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True).autoshape()  # for PIL/cv2/np inputs and NMS
 
 # Read Image List
-imgList = sorted(os.listdir(dirPath))
-# fo = open("../reduced dataset/legal_coco.txt", "r")
-# imgList = fo.readlines()
-# print(imgList)
-# exit()
+# imgList = sorted(os.listdir(dirPath))
+fo = open("../reduced dataset/legal_coco_1.txt", "r")
+imgList = fo.readlines()
 
 # Images
 imgs = []
 filePathList = []
-for imgName in imgList:
-    imgName = imgName.strip('\n')
+for name in imgList:
+    imgName = name.rstrip('\n')
     if imgName[0] == '.' or imgName.split('.')[-1] != 'jpg':
         continue
     filePath = dirPath+'/'+imgName
     imgs.append(cv2.imread(filePath)[:, :, ::-1])
     # filePathList.append(filePath)
     filePathList.append(imgName)
+
 
 # Inference
 results = model(imgs, size=640)  # includes NMS
@@ -40,15 +38,13 @@ results = model(imgs, size=640)  # includes NMS
 # results.save()  # save as results1.jpg, results2.jpg... etc.
 
 # Data
-output = {}
+output = []
 for imgIdx in range(len(results.xyxy)):
     xyxy = results.xyxy[imgIdx]
-    height = imgs[imgIdx].shape[0]
-    width = imgs[imgIdx].shape[1]
     imageOutput = {}
     # init
-    personConfidence = 0
-    skateboardConfidence = 0
+    personCount = 0
+    skateboardCount = 0
     personBoundingBox = None
     skateboardBoundingBox = None
     # for all objects
@@ -56,21 +52,18 @@ for imgIdx in range(len(results.xyxy)):
         entry = xyxy[i].numpy().tolist()
         classId = entry[5]
         if classId == 0:   # person
-            if personConfidence < entry[4]:
-                personConfidence = entry[4]
-                personBoundingBox = {'x1': entry[0]/width, 'y1': entry[1]/height, 'x2': entry[2]/width, 'y2': entry[3]/height, 'confidence': entry[4]}
+            personCount += 1
         if classId == 36:  # skateboard
-            if skateboardConfidence < entry[4]:
-                skateboardConfidence = entry[4]
-                skateboardBoundingBox = {'x1': entry[0]/width, 'y1': entry[1]/height, 'x2': entry[2]/width, 'y2': entry[3]/height, 'confidence': entry[4]}
-    imageOutput['person'] = personBoundingBox
-    imageOutput['skateboard'] = skateboardBoundingBox
-    output[filePathList[imgIdx]] = imageOutput
+            skateboardCount += 1
+    if personCount == 1 and skateboardCount == 1:
+        output.append(filePathList[imgIdx])
+# print(output)
 
-# Write .json
-fileName = "../out/YOLO_"+LABEL+".json"
-with open(fileName, "w", encoding='utf-8') as jsonFile:
-    json.dump(output, jsonFile)
+# Write .txt
+f = open('imgList_1.txt', 'w')
+for fileName in output:
+    f.write(fileName+'\n')
+f.close()
 
 
 #          x1 (pixels)  y1 (pixels)  x2 (pixels)  y2 (pixels)   confidence        class
