@@ -36,3 +36,21 @@ openpose[CMU]:https://github.com/CMU-Perceptual-Computing-Lab/openpose
 ### 12/18
 
 - Process pose data into a csv file, with label mapping being { 0:flying, 1:sliding, 2:static}
+
+- Testing multi-class classification using SVM on COCO dataset 
+
+  |                                           | linear svc | rbf svc |
+  | ----------------------------------------- | ---------- | ------- |
+  | 3 classes, 100 imgs for each class        | ~0.60      | ~0.3    |
+  | 2 classes (flying T/F), 200 imgs for each | ~0.75      | ~0.5    |
+
+- Question: rbf overfit????
+
+- 3 classes:
+
+![image-20201219013551188](C:\Users\zwm\AppData\Roaming\Typora\typora-user-images\image-20201219013551188.png)
+
+- 2 classes: 
+
+![image-20201219013625406](C:\Users\zwm\AppData\Roaming\Typora\typora-user-images\image-20201219013625406.png)
+
