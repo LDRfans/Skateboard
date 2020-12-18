@@ -97,7 +97,10 @@ def ReadFolder1(case):
             continue
         try:
             Angle = Pose2Angle(Kp)
-            Result.append(list(Angle)+[int(case)])
+            if int(case) != 0:
+                Result.append(list(Angle)+[1])
+            else:
+                Result.append(list(Angle)+[int(case)])
 
         except:
             NumLackKp += 1
@@ -105,8 +108,7 @@ def ReadFolder1(case):
 
     print("Total Number of images from {} is {};\nNumber of images with a lack of keypoints is {};\nNumber of images with no human / more than 1 detected is {}. ".format(case, len(Files), NumLackKp, NumNoHuman))
     ProperNum = len(Files) - NumLackKp - NumNoHuman
-
-    WriteCsv(data=Result)
+    return Result
 
 
 
@@ -175,4 +177,5 @@ def CalculateAngle(A, B, C):
 if __name__ == "__main__":
     while True:
         case = input("We are dealing with coco now. Choose one from { 0(flying), 1(sliding), 2(static)}!\n")
-        ReadFolder1(case)
+        Result = ReadFolder1(case)
+        WriteCsv(data=Result)
