@@ -1,3 +1,7 @@
+---
+typora-copy-images-to: doc\img
+---
+
 # Skateboard
 Computer Vision 2020 Course Project
 
@@ -48,9 +52,8 @@ openpose[CMU]:https://github.com/CMU-Perceptual-Computing-Lab/openpose
 
 - 3 classes:
 
-![image-20201219013551188](C:\Users\zwm\AppData\Roaming\Typora\typora-user-images\image-20201219013551188.png)
+![svm_3classes](doc/img/svm_3classes.png)
 
 - 2 classes: 
 
-![image-20201219013625406](C:\Users\zwm\AppData\Roaming\Typora\typora-user-images\image-20201219013625406.png)
-
+![svm_2classes](doc/img/svm_2classes.png)
