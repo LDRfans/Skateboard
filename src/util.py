@@ -18,6 +18,10 @@ Body25Kp = ["Nose", "Neck", "RShoulder", "RElbow", "RWrist", "LShoulder", "LElbo
 
 NOHUMAN = 0
 LACKKP = 1
+FlyingAvg = [138.8811921632241, 142.2911862962904, 88.91668435883095, 90.02673982106752, 150.4544595129767, 145.43553591321907, 116.73161248462749, 103.71046752557818]
+SlidingAvg = [124.49742389801821, 124.20766153812566, 141.5521921015001, 137.74095218264895, 147.0786284501213, 139.4531926227165, 97.09056700644855, 93.83422144988009]
+StaticAvg = [110.41301588840834, 108.88675673505043, 145.58438761917873, 145.46713221548964, 140.3103182492076, 142.2842076131475, 96.94728274168779, 99.11966207655712]
+Avg = [FlyingAvg, SlidingAvg, StaticAvg]
 
 def ReadFolder(case):
     if int(case) == 0:
@@ -81,9 +85,6 @@ def ReadFolder1(case):
     
     Files = os.listdir(path)
 
-    if len(Files) > 100:
-        Files = Files[:100]
-
     NumLackKp = 0
     NumNoHuman = 0
     Result = [] # need to specify format
@@ -93,27 +94,35 @@ def ReadFolder1(case):
             Kp, _ = ParseJson(path + '/' + i)
         except:
             NumNoHuman += 1
-            Result.append(NOHUMAN)
+            Result.append([NOHUMAN]*8 + [int(case)])
             continue
         try:
-            Angle = Pose2Angle(Kp)
-            if int(case) != 0:
-                Result.append(list(Angle)+[1])
-            else:
-                Result.append(list(Angle)+[int(case)])
-
+            Angle = Pose2Angle(Kp, int(case))
+            Result.append(list(Angle) +[int(case)])
         except:
             NumLackKp += 1
-            Result.append(LACKKP)
+            Result.append([LACKKP]*8 +[int(case)])
 
     print("Total Number of images from {} is {};\nNumber of images with a lack of keypoints is {};\nNumber of images with no human / more than 1 detected is {}. ".format(case, len(Files), NumLackKp, NumNoHuman))
     ProperNum = len(Files) - NumLackKp - NumNoHuman
     return Result
 
 
+def CalculateAvg(Result):
+    LShoulder = [i[0] for i in Result if i not in [NOHUMAN, LACKKP]]
+    RShoulder = [i[1] for i in Result if i not in [NOHUMAN, LACKKP]]
+    LKnee = [i[2] for i in Result if i not in [NOHUMAN, LACKKP]]
+    RKnee = [i[3] for i in Result if i not in [NOHUMAN, LACKKP]]
+    print("avg degree: ", np.mean(LShoulder), np.mean(RShoulder), np.mean(LKnee), np.mean(RKnee))
+    LShoulder = [i[4] for i in Result if i not in [NOHUMAN, LACKKP]]
+    RShoulder = [i[5] for i in Result if i not in [NOHUMAN, LACKKP]]
+    LKnee = [i[6] for i in Result if i not in [NOHUMAN, LACKKP]]
+    RKnee = [i[7] for i in Result if i not in [NOHUMAN, LACKKP]]
+    print("avg degree: ", np.mean(LShoulder), np.mean(RShoulder), np.mean(LKnee), np.mean(RKnee))
 
 
-def WriteCsv(header=["LShoulder", "RShoulder", "LKnee", "RKnee", "Label"], data=[], fileName="pose/coco_pose.csv"):
+
+def WriteCsv(header=["LShoulder", "RShoulder", "LKnee", "RKnee", "LElbow", "RElbow", "LHip", "RHip", "Label"], data=[], fileName="pose/coco_pose.csv"):
     try:
         with open(fileName,"a", newline='') as f:
             writer = csv.writer(f)
@@ -145,16 +154,48 @@ def ParseJson(path="./pose/flying/json/img01_keypoints.json"):
         return Kp, C
 
 
-def Pose2Angle(Kp):
+def Pose2Angle(Kp, case):
     '''
         Input: Kp
-        Output: 4 angles 
+        Output: 8 angles 
     '''
-    LShoulder = CalculateAngle(Kp["LElbow"], Kp["LShoulder"], Kp["Neck"])
-    RShoulder = CalculateAngle(Kp["RElbow"], Kp["RShoulder"], Kp["Neck"])
-    LKnee = CalculateAngle(Kp["LHip"], Kp["LKnee"], Kp["LAnkle"])
-    RKnee = CalculateAngle(Kp["RHip"], Kp["RKnee"], Kp["RAnkle"])
-    return (LShoulder, RShoulder, LKnee, RKnee)
+    try:
+        LShoulder = CalculateAngle(Kp["LElbow"], Kp["LShoulder"], Kp["Neck"])
+    except:
+        LShoulder = Avg[case][0]
+    try:
+        RShoulder = CalculateAngle(Kp["RElbow"], Kp["RShoulder"], Kp["Neck"])
+    except:
+        RShoulder = Avg[case][1]
+
+    try:
+        LKnee = CalculateAngle(Kp["LHip"], Kp["LKnee"], Kp["LAnkle"])
+    except:
+        LKnee = Avg[case][2]
+    try:
+        RKnee = CalculateAngle(Kp["RHip"], Kp["RKnee"], Kp["RAnkle"])
+    except:
+        RKnee = Avg[case][3]
+
+    try:
+        LElbow = CalculateAngle(Kp["LShoulder"], Kp["LElbow"], Kp["LWrist"])
+    except:
+        LElbow = Avg[case][4]
+    try:
+       RElbow = CalculateAngle(Kp["RShoulder"], Kp["RElbow"], Kp["RWrist"])
+    except:
+        RElbow = Avg[case][5]
+
+    try:
+        LHip = CalculateAngle(Kp["MidHip"], Kp["LHip"], Kp["LKnee"])
+    except:
+        LHip = Avg[case][6]
+    try:
+        RHip = CalculateAngle(Kp["MidHip"], Kp["RHip"], Kp["RKnee"])
+    except:
+        RHip = Avg[case][7]
+
+    return (LShoulder, RShoulder, LKnee, RKnee, LElbow, RElbow, LHip, RHip)
 
 
 
