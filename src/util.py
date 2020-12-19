@@ -23,7 +23,7 @@ SlidingAvg = [124.49742389801821, 124.20766153812566, 141.5521921015001, 137.740
 StaticAvg = [110.41301588840834, 108.88675673505043, 145.58438761917873, 145.46713221548964, 140.3103182492076, 142.2842076131475, 96.94728274168779, 99.11966207655712]
 Avg = [FlyingAvg, SlidingAvg, StaticAvg]
 
-def ReadFolder(case):
+def ReadFolderPose(case):
     if int(case) == 0:
         path = "./pose/coco/flying/json"
     elif int(case) == 1:
@@ -35,45 +35,30 @@ def ReadFolder(case):
     
     Files = os.listdir(path)
 
-    if len(Files) > 100:
-        Files = Files[:100]
-
     NumLackKp = 0
     NumNoHuman = 0
     Result = [] # need to specify format
     ProperImg = [] # a list of proper image
     for i in Files:
         try:
-            Kp, _ = ParseJson(path + '/' + i)
+            _, _, Pose = ParseJson(path + '/' + i)
+            Result.append(Pose+[int(case)])
         except:
             NumNoHuman += 1
-            Result.append(NOHUMAN)
+            Result.append([NOHUMAN]*75+[int(case)])
             continue
-        try:
-            Angle = Pose2Angle(Kp)
-            Result.append(Angle)
-            RePath = i.split("_")[0] + '.jpg'
-            ProperImg.append(RePath)
-        except:
-            NumLackKp += 1
-            Result.append(LACKKP)
 
     print("Total Number of images from {} is {};\nNumber of images with a lack of keypoints is {};\nNumber of images with no human / more than 1 detected is {}. ".format(case, len(Files), NumLackKp, NumNoHuman))
     ProperNum = len(Files) - NumLackKp - NumNoHuman
-    LShoulder = [i[0] for i in Result if i not in [NOHUMAN, LACKKP]]
-    RShoulder = [i[1] for i in Result if i not in [NOHUMAN, LACKKP]]
-    LKnee = [i[2] for i in Result if i not in [NOHUMAN, LACKKP]]
-    RKnee = [i[3] for i in Result if i not in [NOHUMAN, LACKKP]]
-    print("avg degree: ", np.mean(LShoulder), np.mean(RShoulder), np.mean(LKnee), np.mean(RKnee))
-    print("std: ", np.std(LShoulder), np.std(RShoulder), np.std(LKnee), np.std(RKnee))
-
 
     # write the proper images' name into a file
     # with open("legal.txt", "w+") as f:
     #    for img in ProperImg:
     #        f.write(img + "\n")
 
-def ReadFolder1(case):
+    return Result
+
+def ReadFolderAngle(case):
     if int(case) == 0:
         path = "./pose/coco/flying/json"
     elif int(case) == 1:
@@ -91,7 +76,7 @@ def ReadFolder1(case):
     ProperImg = [] # a list of proper image
     for i in Files:
         try:
-            Kp, _ = ParseJson(path + '/' + i)
+            Kp, _, _ = ParseJson(path + '/' + i)
         except:
             NumNoHuman += 1
             Result.append([NOHUMAN]*8 + [int(case)])
@@ -151,7 +136,7 @@ def ParseJson(path="./pose/flying/json/img01_keypoints.json"):
         Mask = [0, 1, 2]
         Kp = { Body25Kp[i]: (Pose[3*i], Pose[3*i+1]) if Pose[3*i+2] != 0 else None for i in range(25) }
         C =  { Body25Kp[i]: Pose[3*i+2] if Pose[3*i+2] != 0 else None for i in range(25) }
-        return Kp, C
+        return Kp, C, Pose
 
 
 def Pose2Angle(Kp, case):
@@ -215,8 +200,17 @@ def CalculateAngle(A, B, C):
 
 
 
+def FormPoseHeader():
+    header = []
+    for i in Body25Kp:
+        header.append(i+"X")
+        header.append(i+"Y")
+        header.append(i+"C")
+    header.append("Label")
+    return header
+
 if __name__ == "__main__":
     while True:
         case = input("We are dealing with coco now. Choose one from { 0(flying), 1(sliding), 2(static)}!\n")
-        Result = ReadFolder1(case)
-        WriteCsv(data=Result)
+        Result = ReadFolderPose(case)
+        WriteCsv(data=Result, header=FormPoseHeader())
