@@ -8,7 +8,7 @@ import csv
 
 DIR_PATH = "../../data/COCO_3classes/"
 
-TRAINING_ROUND = 650
+TRAINING_ROUND = 600
 BATCH_SIZE = 20
 FLYING_INDEX = 0
 SLIDING_INDEX = 1
