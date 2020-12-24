@@ -57,3 +57,13 @@ openpose[CMU]:https://github.com/CMU-Perceptual-Computing-Lab/openpose
 - 2 classes: 
 
 ![svm_2classes](doc/img/svm_2classes.png)
+
+### 12/19
+
+- Add 4 more angles;
+- Imputed data with average in each class;
+- Run OpenPose with regularized pixel coordinate: scale it in the range [0,1], where (0,0) would                                               be the top-left corner of the image, and (1,1) the bottom-right one;
+
+- Form coco_pose.csv and coco_angle.csv.
+
+- Now input: 25(kp)*3(x,y,confidence) + 8(angles) + bb 
