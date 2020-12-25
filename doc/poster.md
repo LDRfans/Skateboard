@@ -6,7 +6,7 @@
 
 - Aim: human 2D pose estimation
 
-- Current 2D human skeleton model: Body25, COCO, MPI.
+- Current 2D human skeleton models: Body25, COCO, MPI.
 - Body25: the most accurate, the fastest on GPU.
 - OpenPose: real time, high accuracy, easy-to-use API.
 - Output: keypoint coordinates, confidence levels
@@ -18,4 +18,4 @@
   - 25 Normalized keypoint coordinates: [0,m] x [0,n] -> [0,1] x [0,1]
   - 25 confidence levels: (0,1]
 
-- Effectiveness: State estimation based on linear SVC ~60%
+- Effectiveness: state estimation based on linear SVC ~60% on test set
