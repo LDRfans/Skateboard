@@ -8,11 +8,12 @@ import csv
 
 DIR_PATH = "../../data/COCO_3classes/"
 
-TRAINING_ROUND = 600
+TRAINING_ROUND = 400
 BATCH_SIZE = 20
 FLYING_INDEX = 0
 SLIDING_INDEX = 1
 STATIC_INDEX = 2
+ANGLR_NUMBER = 8
 
 def labelDecoder(label):
     if label == "flying":
@@ -31,14 +32,14 @@ class skateboardDataset(Dataset):
             reader = csv.reader(csvFile)
             for keyIndex, row in enumerate(reader):
                 key = list(self.data.keys())[keyIndex]
-                self.data[key]['angles'] = [float(angleStr) / 180 for angleStr in list(row)[:4]]
+                self.data[key]['angles'] = [float(angleStr) / 180 for angleStr in list(row)[:ANGLR_NUMBER]]
 
     def __getitem__(self, index):
         value = list(self.data.values())[index]
         label = list(self.data.keys())[index].split("_")[0]
         person = list(value['person'].values())[:4]
         skateboard = list(value['skateboard'].values())[:4]
-        angles = value['angles'][:4]
+        angles = value['angles'][:ANGLR_NUMBER]
 
         return torch.tensor(person + skateboard + angles), torch.tensor(labelDecoder(label))
 
@@ -47,8 +48,8 @@ class skateboardDataset(Dataset):
 
 
 # load dataset
-trainingData = skateboardDataset(DIR_PATH+"YOLO_train.json", DIR_PATH+"coco_pose_training.csv")
-testingData = skateboardDataset(DIR_PATH+"YOLO_test.json", DIR_PATH+"coco_pose_testing.csv")
+trainingData = skateboardDataset(DIR_PATH+"YOLO_training.json", DIR_PATH+"coco_angle_training.csv")
+testingData = skateboardDataset(DIR_PATH+"YOLO_testing.json", DIR_PATH+"coco_angle_testing.csv")
 dataloaderTrain = DataLoader(trainingData, BATCH_SIZE, shuffle=True)
 dataloaderTest = DataLoader(testingData, BATCH_SIZE, shuffle=True)
 
@@ -58,13 +59,14 @@ class LeNet(nn.Module):
     def __init__(self):
         super(LeNet, self).__init__()
         # Fully connected layer
-        self.fc1 = nn.Linear(12, 120)
-        self.fc2 = nn.Linear(120, 120)
-        self.fc3 = nn.Linear(120, 120)
-        self.fc4 = nn.Linear(120, 60)
-        self.fc5 = nn.Linear(60, 30)
-        self.fc6 = nn.Linear(30, 9)
-        self.fc7 = nn.Linear(9, 3)
+        self.fc1 = nn.Linear(16, 160)
+        self.fc2 = nn.Linear(160, 160)
+        self.fc3 = nn.Linear(160, 160)
+        self.fc4 = nn.Linear(160, 120)
+        self.fc5 = nn.Linear(120, 60)
+        self.fc6 = nn.Linear(60, 30)
+        self.fc7 = nn.Linear(30, 30)
+        self.fc8 = nn.Linear(30, 3)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
@@ -73,7 +75,8 @@ class LeNet(nn.Module):
         x = F.relu(self.fc4(x))
         x = F.relu(self.fc5(x))
         x = F.relu(self.fc6(x))
-        x = self.fc7(x)
+        x = F.relu(self.fc7(x))
+        x = self.fc8(x)
         return x
 
 
@@ -109,7 +112,7 @@ for epoch in range(TRAINING_ROUND):
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += sum([1 for i, p in enumerate(list(predicted)) if labels[i][p] == 1])
-    print('[Epoch %d] Accuracy on the 20 test images: %d %%' % (epoch+1, 100 * correct / total))
+    print('[Epoch %d] Accuracy on the 110 test images: %d %%' % (epoch+1, 100 * correct / total))
 print("--- Training Done ---")
 
 # Testing
@@ -133,6 +136,5 @@ with torch.no_grad():
         staticCorrect += sum([1 for i, p in enumerate(list(predicted)) if labels[i][p] == 1 and p == 2])
         slidingButFlying += sum([1 for i, p in enumerate(list(predicted)) if labels[i][1] == 1 and p == FLYING_INDEX])
         slidingButStatic += sum([1 for i, p in enumerate(list(predicted)) if labels[i][1] == 1 and p == 2])
-print("flyingCorrect: %d/20, slidingCorrect: %d/20, staticCorrect: %d/20, slidingButFlying: %d, slidingButStatic: %d"
+print("flyingCorrect: %d/42, slidingCorrect: %d/38, staticCorrect: %d/30, slidingButFlying: %d, slidingButStatic: %d"
       % (flyingCorrect, slidingCorrect, staticCorrect, slidingButFlying, slidingButStatic))
-# print('Accuracy of the network on the 20 test images: %d %%' % (100 * correct / total))
