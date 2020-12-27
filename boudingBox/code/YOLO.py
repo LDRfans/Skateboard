@@ -4,7 +4,7 @@ import json
 import os
 import numpy as np
 
-LABEL = "train"
+LABEL = "testing"
 dirPath = "../COCO_3classes/"+LABEL
 # dirPath = "../reduced dataset/flying skateboard"
 outPath = '../out'
@@ -49,8 +49,8 @@ for imgIdx in range(len(results.xyxy)):
     # init
     personConfidence = 0
     skateboardConfidence = 0
-    personBoundingBox = None
-    skateboardBoundingBox = None
+    personBoundingBox = {'x1': 0.0, 'y1': 0.0, 'x2': 0.0, 'y2': 0.0, 'confidence': 0.0}
+    skateboardBoundingBox = {'x1': 0.0, 'y1': 0.0, 'x2': 0.0, 'y2': 0.0, 'confidence': 0.0}
     # for all objects
     for i in range(xyxy.shape[0]):
         entry = xyxy[i].numpy().tolist()

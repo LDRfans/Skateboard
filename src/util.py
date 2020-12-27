@@ -107,7 +107,7 @@ def CalculateAvg(Result):
 
 
 
-def WriteCsv(header=["LShoulder", "RShoulder", "LKnee", "RKnee", "LElbow", "RElbow", "LHip", "RHip", "Label"], data=[], fileName="pose/coco_pose.csv"):
+def WriteCsv(header=["LShoulder", "RShoulder", "LKnee", "RKnee", "LElbow", "RElbow", "LHip", "RHip", "Label"], data=[], fileName="pose/coco_angle.csv"):
     try:
         with open(fileName,"a", newline='') as f:
             writer = csv.writer(f)
@@ -172,11 +172,11 @@ def Pose2Angle(Kp, case):
         RElbow = Avg[case][5]
 
     try:
-        LHip = CalculateAngle(Kp["MidHip"], Kp["LHip"], Kp["LKnee"])
+        LHip = CalculateAngle(Kp["Neck"], Kp["LHip"], Kp["LKnee"])
     except:
         LHip = Avg[case][6]
     try:
-        RHip = CalculateAngle(Kp["MidHip"], Kp["RHip"], Kp["RKnee"])
+        RHip = CalculateAngle(Kp["Neck"], Kp["RHip"], Kp["RKnee"])
     except:
         RHip = Avg[case][7]
 
@@ -213,4 +213,4 @@ if __name__ == "__main__":
     while True:
         case = input("We are dealing with coco now. Choose one from { 0(flying), 1(sliding), 2(static)}!\n")
         Result = ReadFolderPose(case)
-        WriteCsv(data=Result, header=FormPoseHeader())
+        WriteCsv(data=Result)
