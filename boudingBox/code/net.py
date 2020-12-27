@@ -119,8 +119,8 @@ for epoch in range(TRAINING_ROUND):
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += sum([1 for i, p in enumerate(list(predicted)) if labels[i][p] == 1])
-    # print('[Epoch %d] Accuracy on the 110 test images: %d %%' % (epoch+1, 100 * correct / total))
-    print(100 * correct / total)
+    print('[Epoch %d] Accuracy on the 110 test images: %d %%' % (epoch+1, 100 * correct / total))
+    # print(100 * correct / total)
 print("--- Training Done ---")
 
 # Testing

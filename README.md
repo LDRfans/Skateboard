@@ -6,7 +6,7 @@ typora-copy-images-to: doc\img
 Computer Vision 2020 Course Project
 
 
-openpose[CMU]:https://github.com/CMU-Perceptual-Computing-Lab/openpose
+Get the complete code from GitHub: https://github.com/LDRfans/Skateboard
 
 
 
