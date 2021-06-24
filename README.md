@@ -18,4 +18,4 @@ python3 net.py
 
 openpose[CMU]:https://github.com/CMU-Perceptual-Computing-Lab/openpose
 
-[poster](./poster.jpg)
+![poster](./poster.jpg)
